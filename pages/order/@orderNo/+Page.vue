@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!order" class="alert alert-warning">订单不存在，或查询凭证无效。</div>
+  <div v-if="!order" class="alert alert-warning">Order not found or invalid query credentials.</div>
   <div v-else class="space-y-6">
     <section class="card bg-base-100 shadow-sm">
       <div class="card-body">
@@ -20,34 +20,34 @@
     <section class="grid gap-6 lg:grid-cols-2">
       <article class="card bg-base-100 shadow-sm">
         <div class="card-body">
-          <h2 class="card-title">订单信息</h2>
+          <h2 class="card-title">Order Details</h2>
           <div class="space-y-2 text-sm">
-            <div class="flex justify-between"><span>商品</span><span>{{ order.productName }}</span></div>
-            <div class="flex justify-between"><span>数量</span><span>{{ order.quantity }}</span></div>
-            <div class="flex justify-between"><span>商品总价</span><span>{{ formatCents(order.originalAmount || order.amount) }}</span></div>
+            <div class="flex justify-between"><span>Product</span><span>{{ order.productName }}</span></div>
+            <div class="flex justify-between"><span>Quantity</span><span>{{ order.quantity }}</span></div>
+            <div class="flex justify-between"><span>Subtotal</span><span>{{ formatCents(order.originalAmount || order.amount) }}</span></div>
             <div v-if="order.discountCodeStr" class="flex justify-between text-orange-400">
-              <span>折扣码</span>
+              <span>Discount Code</span>
               <span>{{ order.discountCodeStr }}</span>
             </div>
             <div v-if="order.discountAmount" class="flex justify-between text-orange-400">
-              <span>折扣优惠</span>
+              <span>Discount</span>
               <span>-{{ formatCents(order.discountAmount) }}</span>
             </div>
             <div class="flex justify-between font-bold">
-              <span>实付金额</span>
+              <span>Total Paid</span>
               <span class="text-primary">{{ formatCents(order.amount) }}</span>
             </div>
-            <div class="flex justify-between"><span>支付方式</span><span>{{ getPaymentProviderLabel(order.paymentProvider) }}</span></div>
+            <div class="flex justify-between"><span>Payment Method</span><span>{{ getPaymentProviderLabel(order.paymentProvider) }}</span></div>
           </div>
           <div v-if="order.paymentStatus === 'UNPAID'" class="mt-4">
-            <AppButton v-if="order.paymentProvider !== 'ALIPAY_FACE'" size="sm" variant="primary" :loading="paying" @click="handleContinuePay">继续支付</AppButton>
+            <AppButton v-if="order.paymentProvider !== 'ALIPAY_FACE'" size="sm" variant="primary" :loading="paying" @click="handleContinuePay">Continue Payment</AppButton>
             <div v-if="order.paymentProvider === 'ALIPAY_FACE'" class="space-y-3">
               <div v-if="qrCodeUrl">
-                <p class="text-sm text-base-content/70">请使用【支付宝】扫描下方二维码完成支付：</p>
+                <p class="text-sm text-base-content/70">Scan the QR code below to complete payment:</p>
                 <div class="flex justify-center my-3">
-                  <img :src="qrCodeUrl" alt="支付宝当面付二维码" class="w-48 h-48 rounded-box border border-base-300" />
+                  <img :src="qrCodeUrl" alt="Payment QR code" class="w-48 h-48 rounded-box border border-base-300" />
                 </div>
-                <p class="text-xs text-center text-base-content/50">二维码有效期 2 小时</p>
+                <p class="text-xs text-center text-base-content/50">QR code expires in 2 hours.</p>
               </div>
               <div v-if="paying && !qrCodeUrl" class="flex justify-center py-8">
                 <span class="loading loading-spinner loading-lg"></span>
@@ -63,11 +63,11 @@
 
       <article class="card bg-base-100 shadow-sm">
         <div class="card-body">
-          <h2 class="card-title">发货内容</h2>
+          <h2 class="card-title">Delivery Content</h2>
           <div v-if="order.deliveryContents.length" class="space-y-2">
             <pre v-for="content in order.deliveryContents" :key="content" class="rounded-box bg-base-200 p-3 text-sm whitespace-pre-wrap break-all">{{ content }}</pre>
           </div>
-          <p v-else class="text-sm text-base-content/60">当前订单尚未支付或尚未自动发货。</p>
+          <p v-else class="text-sm text-base-content/60">This order is unpaid or has not been delivered yet.</p>
         </div>
       </article>
     </section>
@@ -80,7 +80,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import AppButton from "../../../components/AppButton.vue";
 import { useData } from "vike-vue/useData";
 import { formatCents } from "../../../lib/utils/money";
-import { getDeliveryStatusLabel, getDeliveryStatusType, getOrderStatusLabel, getOrderStatusType, getPaymentProviderLabel, getPaymentStatusLabel, getPaymentStatusType } from "../../../lib/utils/order-status";
+import { getDeliveryStatusType, getOrderStatusType, getPaymentStatusType } from "../../../lib/utils/order-status";
 import { updateLocalOrder } from "../../../lib/local-orders";
 import StatusTag from "../../../components/StatusTag.vue";
 import { onCreatePayment } from "./createPayment.telefunc";
@@ -91,6 +91,22 @@ const { order } = useData<Data>();
 const paying = ref(false);
 const paymentError = ref("");
 const qrCodeUrl = ref("");
+
+function getOrderStatusLabel(status: string) {
+  return ({ PENDING: "Pending", PAID: "Paid", DELIVERED: "Delivered", CLOSED: "Closed", FAILED: "Failed" } as Record<string, string>)[status] || status;
+}
+
+function getPaymentStatusLabel(status: string) {
+  return ({ UNPAID: "Unpaid", PAID: "Paid", FAILED: "Payment Failed" } as Record<string, string>)[status] || status;
+}
+
+function getDeliveryStatusLabel(status: string) {
+  return ({ NOT_DELIVERED: "Not Delivered", DELIVERED: "Delivered", FAILED: "Delivery Failed" } as Record<string, string>)[status] || status;
+}
+
+function getPaymentProviderLabel(provider: string) {
+  return ({ EPAY: "E-Pay", ALIPAY: "Alipay", ALIPAY_FACE: "Alipay QR", STRIPE: "Stripe", BEPUSDT: "BEpusdt", FREE_PAY: "Free" } as Record<string, string>)[provider] || provider;
+}
 
 const POLL_INTERVAL = 5000; // 5 seconds
 let pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -194,9 +210,9 @@ async function fetchQrCode() {
       renderQrImage();
       return;
     }
-    paymentError.value = "未获取到支付二维码";
+    paymentError.value = "Payment QR code was not available.";
   } catch (error) {
-    paymentError.value = normalizeTelefuncError(error, "生成二维码失败");
+    paymentError.value = normalizeTelefuncError(error, "Failed to generate QR code.");
   } finally {
     paying.value = false;
   }
@@ -221,9 +237,9 @@ async function handleContinuePay() {
       window.location.href = result.payUrl;
       return;
     }
-    paymentError.value = "未获取到支付链接";
+    paymentError.value = "Payment link was not available.";
   } catch (error) {
-    paymentError.value = normalizeTelefuncError(error, "拉起支付失败");
+    paymentError.value = normalizeTelefuncError(error, "Failed to start payment.");
   } finally {
     paying.value = false;
   }

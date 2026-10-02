@@ -6,8 +6,8 @@ export async function onBeforeRender(pageContext: PageContextServer) {
   return {
     pageContext: {
       site,
-      title: site?.siteName || "EK发卡商城",
-      description: site?.siteSubtitle || "Cloudflare Workers 免费部署自动发卡商城",
+      title: site?.siteName || "EK Card Store",
+      description: site?.siteSubtitle || "A digital store powered by Cloudflare Workers",
     },
   };
 }

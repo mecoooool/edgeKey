@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!product" class="alert alert-warning">商品不存在或未上架。</div>
+  <div v-if="!product" class="alert alert-warning">This product does not exist or is no longer available.</div>
   <div v-else class="grid gap-6 lg:grid-cols-[2fr_1fr]">
     <section class="card bg-base-100 shadow-sm overflow-hidden">
       <figure class="w-full bg-base-200 !m-0">
@@ -18,7 +18,7 @@
           v-html="descriptionHtml"
         ></div>
         <div class="rounded-box bg-base-200 p-4 text-sm text-base-content/80">
-          {{ product.purchaseNote || '下单后将生成待支付订单，支付成功后会给您的联系邮箱发送通知，请注意查看。' }}
+          {{ product.purchaseNote || 'A pending order will be created after checkout. Once payment is confirmed, a notification will be sent to your email.' }}
         </div>
       </div>
     </section>
@@ -27,35 +27,35 @@
       <div class="lg:sticky lg:top-24 card bg-base-100 shadow-sm">
         <div class="card-body space-y-4">
           <div>
-            <div class="text-sm text-base-content/60">当前价格</div>
+            <div class="text-sm text-base-content/60">Current Price</div>
             <div class="text-3xl font-bold text-primary">{{ formatCents(product.price) }}</div>
           </div>
           <div class="flex">
               <!-- <div class="text-sm text-base-content/70">限购 {{ product.minBuy }} - {{ product.maxBuy }} 件</div> -->
-              <div class="text-sm text-base-content/70">限购 {{ product.maxBuy }} 件，</div>
-              <div class="text-sm text-base-content/70">发货方式：{{ getDeliveryTypeLabel(product.deliveryType) }}</div>
+              <div class="text-sm text-base-content/70">Limit: {{ product.maxBuy }} item(s)</div>
+              <div class="text-sm text-base-content/70">Delivery: {{ getDeliveryTypeLabel(product.deliveryType) }}</div>
           </div>
           <div class="divider my-0"></div>
 
           <label class="flex flex-col gap-1.5">
-            <span class="label-text font-medium">联系邮箱 <span class="text-error">*</span></span>
+            <span class="label-text font-medium">Email <span class="text-error">*</span></span>
             <input v-model="form.contactValue" type="email" class="input input-bordered w-full" placeholder="name@example.com" />
           </label>
-          <p class="-mt-2 text-xs text-base-content/60">必填，自动发货和售后联系都会发送到这个邮箱。</p>
+          <p class="-mt-2 text-xs text-base-content/60">Required. Delivery details and support messages will be sent to this email.</p>
 
           <label class="flex flex-col gap-1.5">
-            <span class="label-text font-medium">购买数量</span>
+            <span class="label-text font-medium">Quantity</span>
             <input v-model.number="form.quantity" type="number" :min="product.minBuy" :max="product.maxBuy" class="input input-bordered w-full" />
           </label>
 
           <label class="flex flex-col gap-1.5">
-            <span class="label-text font-medium">折扣码</span>
+            <span class="label-text font-medium">Discount Code</span>
             <div class="flex gap-2">
               <input 
                 v-model="form.discountCode" 
                 type="text" 
                 class="input input-bordered flex-1" 
-                placeholder="输入折扣码（可选）"
+                placeholder="Enter discount code (optional)"
                 :disabled="discountPreview.loading"
               />
               <button 
@@ -63,30 +63,30 @@
                 :disabled="!form.discountCode.trim() || discountPreview.loading"
                 @click="handlePreviewDiscount"
               >
-                {{ discountPreview.loading ? '验证中...' : '验证' }}
+                {{ discountPreview.loading ? 'Checking...' : 'Check' }}
               </button>
             </div>
           </label>
           <p v-if="discountPreview.error" class="-mt-2 text-xs text-error">{{ discountPreview.error }}</p>
-          <p v-if="discountPreview.valid" class="-mt-2 text-xs text-orange-400">折扣码有效，优惠 {{ formatCents(discountPreview.discount) }}</p>
+          <p v-if="discountPreview.valid" class="-mt-2 text-xs text-orange-400">Discount applied: {{ formatCents(discountPreview.discount) }}</p>
 
           <label v-if="product.deliveryType === 'EXPRESS'" class="flex flex-col gap-1.5">
-            <span class="label-text font-medium">收货信息 <span class="text-error">*</span></span>
-            <textarea v-model="form.receiverInfo" class="textarea textarea-bordered w-full" rows="3" placeholder="请填写收货信息，例如：
-张三，13812341234，广东省深圳市xxx"></textarea>
+            <span class="label-text font-medium">Shipping Information <span class="text-error">*</span></span>
+            <textarea v-model="form.receiverInfo" class="textarea textarea-bordered w-full" rows="3" placeholder="Enter shipping details, for example:
+John Doe, +1 555 123 4567, 123 Main Street"></textarea>
           </label>
 
           <label class="flex flex-col gap-1.5">
-            <span class="label-text font-medium">备注</span>
-            <textarea v-model="form.buyerNote" class="textarea textarea-bordered w-full" rows="3" placeholder="可以留下QQ号、微信等联系方式"></textarea>
+            <span class="label-text font-medium">Note</span>
+            <textarea v-model="form.buyerNote" class="textarea textarea-bordered w-full" rows="3" placeholder="Optional contact details or notes"></textarea>
           </label>
 
           <div v-if="!isFreeOrder" class="space-y-2">
-            <div class="text-sm font-medium">支付方式</div>
+            <div class="text-sm font-medium">Payment Method</div>
             <div class="grid gap-3">
               <label v-for="method in paymentMethods" :key="method.provider" class="rounded-box border border-base-300 p-4">
                 <div class="flex items-center justify-between gap-3">
-                  <span>{{ method.label }}</span>
+                  <span>{{ getPaymentMethodLabel(method.provider) }}</span>
                   <input v-model="form.paymentProvider" type="radio" class="radio radio-primary radio-sm" :value="method.provider" />
                 </div>
               </label>
@@ -94,7 +94,7 @@
           </div>
 
           <div v-if="!isFreeOrder && form.paymentProvider === 'EPAY'" class="space-y-2">
-            <div class="text-sm font-medium">易支付渠道</div>
+            <div class="text-sm font-medium">Payment Channel</div>
             <div class="grid gap-3 md:grid-cols-2">
               <label v-for="channel in epayChannels" :key="channel.value" class="rounded-box border border-base-300 p-4">
                 <div class="flex items-center justify-between gap-3">
@@ -120,35 +120,35 @@
 
           <div v-if="discountPreview.valid" class="rounded-box bg-base-200 p-4 space-y-2">
             <div class="flex justify-between text-sm">
-              <span class="text-base-content/70">商品总价</span>
+              <span class="text-base-content/70">Subtotal</span>
               <span>{{ formatCents(product.price * form.quantity) }}</span>
             </div>
             <div class="flex justify-between text-sm text-orange-400">
-              <span>折扣优惠</span>
+              <span>Discount</span>
               <span>-{{ formatCents(discountPreview.discount) }}</span>
             </div>
             <div class="divider my-0"></div>
             <div class="flex justify-between font-bold">
-              <span>实付金额</span>
+              <span>Total</span>
               <span class="text-primary">{{ formatCents(discountPreview.finalAmount) }}</span>
             </div>
           </div>
 
           <p v-if="product.deliveryType === 'CARD_AUTO' && product.availableStock >= 0 && product.availableStock < 10" class="text-sm" :class="product.availableStock === 0 ? 'text-error' : 'text-warning'">
-            {{ product.availableStock === 0 ? '商品都卖光了，看看其他商品' : `库存紧张，仅剩 ${product.availableStock} 件` }}
+            {{ product.availableStock === 0 ? 'Sold out. Please check another product.' : `Low stock: only ${product.availableStock} left` }}
           </p>
-          <p v-else-if="product.deliveryType === 'FIXED_CARD'" class="text-sm text-success">自动发货，库存充足。</p>
+          <p v-else-if="product.deliveryType === 'FIXED_CARD'" class="text-sm text-success">Automatic delivery. In stock.</p>
           <p v-else-if="product.deliveryType === 'MANUAL'" class="text-sm" :class="product.availableStock === 0 ? 'text-error' : product.availableStock > 0 && product.availableStock < 10 ? 'text-warning' : 'text-success'">
-            {{ product.availableStock === 0 ? '商品都卖光了，看看其他商品' : product.availableStock > 0 && product.availableStock < 10 ? `库存紧张，仅剩 ${product.availableStock} 件` : (product.manualDeliveryHint || '支付后，客服将尽快为您处理订单，请耐心等待。') }}
+            {{ product.availableStock === 0 ? 'Sold out. Please check another product.' : product.availableStock > 0 && product.availableStock < 10 ? `Low stock: only ${product.availableStock} left` : (product.manualDeliveryHint || 'Your order will be processed by support after payment.') }}
           </p>
           <p v-else-if="product.deliveryType === 'EXPRESS'" class="text-sm" :class="product.availableStock === 0 ? 'text-error' : product.availableStock > 0 && product.availableStock < 10 ? 'text-warning' : 'text-success'">
-            {{ product.availableStock === 0 ? '商品都卖光了，看看其他商品' : product.availableStock > 0 && product.availableStock < 10 ? `库存紧张，仅剩 ${product.availableStock} 件` : (product.manualDeliveryHint || '请填写收货信息，支付后管理员将安排快递发货。') }}
+            {{ product.availableStock === 0 ? 'Sold out. Please check another product.' : product.availableStock > 0 && product.availableStock < 10 ? `Low stock: only ${product.availableStock} left` : (product.manualDeliveryHint || 'Provide your shipping information and support will arrange delivery after payment.') }}
           </p>
 
           <AppButton variant="primary" :loading="submitting" :disabled="(!isFreeOrder && !paymentMethods.length) || ((product.deliveryType === 'CARD_AUTO' || product.deliveryType === 'MANUAL' || product.deliveryType === 'EXPRESS') && product.availableStock === 0)" @click="handleCreateOrder">
-            {{ (product.deliveryType === 'CARD_AUTO' || product.deliveryType === 'MANUAL' || product.deliveryType === 'EXPRESS') && product.availableStock === 0 ? '已售罄' : isFreeOrder ? '免费获取' : '提交订单' }}
+            {{ (product.deliveryType === 'CARD_AUTO' || product.deliveryType === 'MANUAL' || product.deliveryType === 'EXPRESS') && product.availableStock === 0 ? 'Sold Out' : isFreeOrder ? 'Get for Free' : 'Place Order' }}
           </AppButton>
-          <p v-if="!isFreeOrder && !paymentMethods.length" class="text-sm text-warning">当前没有可用支付方式，请联系管理员启用支付配置。</p>
+          <p v-if="!isFreeOrder && !paymentMethods.length" class="text-sm text-warning">No payment methods are available. Please contact the administrator.</p>
           <p v-if="errorMessage" class="text-sm text-error">{{ errorMessage }}</p>
         </div>
       </div>
@@ -160,13 +160,13 @@
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
     role="dialog"
     aria-modal="true"
-    aria-label="图片预览"
+    aria-label="Image preview"
     @click.self="closeImagePreview"
   >
     <button
       type="button"
       class="btn btn-circle btn-ghost absolute right-4 top-4 text-white hover:bg-white/15"
-      aria-label="关闭图片预览"
+      aria-label="Close image preview"
       @click="closeImagePreview"
     >
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -227,7 +227,11 @@ const form = reactive({
 });
 
 function getDeliveryTypeLabel(type: string) {
-  return ({ CARD_AUTO: "自动发货", FIXED_CARD: "自动发货", MANUAL: "人工发货", EXPRESS: "快递发货" } as Record<string, string>)[type] || type;
+  return ({ CARD_AUTO: "Automatic", FIXED_CARD: "Automatic", MANUAL: "Manual", EXPRESS: "Express" } as Record<string, string>)[type] || type;
+}
+
+function getPaymentMethodLabel(provider: string) {
+  return ({ EPAY: "E-Pay", ALIPAY: "Alipay", ALIPAY_FACE: "Alipay QR", STRIPE: "Stripe", BEPUSDT: "BEpusdt", FREE_PAY: "Free" } as Record<string, string>)[provider] || provider;
 }
 
 let mobile = false;
@@ -266,7 +270,7 @@ function handleDescriptionClick(event: MouseEvent) {
   const image = event.target instanceof HTMLImageElement ? event.target : null;
   if (!image || !descriptionRef.value?.contains(image)) return;
 
-  previewImage.value = { src: image.currentSrc || image.src, alt: image.alt || product?.name || "商品描述图片" };
+  previewImage.value = { src: image.currentSrc || image.src, alt: image.alt || product?.name || "Product description image" };
 }
 
 function closeImagePreview() {
@@ -298,7 +302,7 @@ async function handlePreviewDiscount() {
       discountPreview.error = result.error;
     }
   } catch (error) {
-    discountPreview.error = "验证失败，请重试";
+    discountPreview.error = "Verification failed. Please try again.";
   } finally {
     discountPreview.loading = false;
   }
@@ -309,23 +313,23 @@ async function handleCreateOrder() {
 
   // 免费订单不需要支付方式
   if (!isFreeOrder.value && !form.paymentProvider) {
-    errorMessage.value = "当前没有可用支付方式，请联系管理员启用支付配置。";
+    errorMessage.value = "No payment methods are available. Please contact the administrator.";
     return;
   }
 
   const contactEmail = form.contactValue.trim();
   if (!contactEmail) {
-    errorMessage.value = "联系邮箱不能为空";
+    errorMessage.value = "Email is required.";
     return;
   }
 
   if (!isEmail(contactEmail)) {
-    errorMessage.value = "联系邮箱格式不正确";
+    errorMessage.value = "Please enter a valid email address.";
     return;
   }
 
   if (product.deliveryType === 'EXPRESS' && !form.receiverInfo.trim()) {
-    errorMessage.value = "收货信息不能为空";
+    errorMessage.value = "Shipping information is required.";
     return;
   }
 
@@ -364,7 +368,7 @@ async function handleCreateOrder() {
 
     window.location.href = `/order/${result.orderNo}?token=${encodeURIComponent(result.queryToken)}`;
   } catch (error) {
-    errorMessage.value = normalizeTelefuncError(error, "下单失败");
+    errorMessage.value = normalizeTelefuncError(error, "Order placement failed.");
   } finally {
     submitting.value = false;
   }
@@ -373,7 +377,7 @@ async function handleCreateOrder() {
 function formatDescriptionHtml(value: string) {
   const trimmed = value.trim();
   if (!trimmed) {
-    return "<p>暂无商品描述。</p>";
+    return "<p>No product description available.</p>";
   }
 
   if (/<[a-z][\s\S]*>/i.test(trimmed)) {

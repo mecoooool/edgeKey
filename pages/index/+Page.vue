@@ -24,7 +24,7 @@
           <div class="flex items-center gap-5 shrink-0">
             <div class="flex items-center gap-3 rounded-xl bg-gradient-to-br from-secondary/10 to-base-200 px-5 py-4 shadow-sm">
               <div class="flex flex-col items-center">
-                <span class="text-xs text-base-content/50 font-medium mb-1">在售商品</span>
+                <span class="text-xs text-base-content/50 font-medium mb-1">Products</span>
                 <span class="text-3xl font-bold text-secondary leading-none">{{ catalog.total }}</span>
               </div>
               <div class="flex items-center justify-center size-11 rounded-xl bg-secondary/15 text-secondary">
@@ -41,8 +41,8 @@
     <!-- 商品列表 -->
     <section class="space-y-5">
       <div class="flex items-center gap-3">
-        <h2 class="text-xl font-bold text-base-content">商品列表</h2>
-        <span v-if="filteredProducts.length" class="text-xs text-base-content/40 font-medium">共 {{ filteredProducts.length }} 件</span>
+        <h2 class="text-xl font-bold text-base-content">Products</h2>
+        <span v-if="filteredProducts.length" class="text-xs text-base-content/40 font-medium">{{ filteredProducts.length }} items</span>
       </div>
 
       <!-- 分类筛选 -->
@@ -52,7 +52,7 @@
           :class="activeCategoryId === null ? 'btn-primary shadow-sm shadow-primary/20' : 'btn-ghost border border-base-300 hover:border-primary/40 hover:text-primary'"
           @click="activeCategoryId = null"
         >
-          全部商品
+          All Products
         </button>
         <button
           v-for="category in catalog.categories"
@@ -83,7 +83,7 @@
             <!-- 分类标签 -->
             <div class="absolute top-3 left-3">
               <span class="badge badge-sm font-medium rounded-md bg-base-100/85 backdrop-blur-sm border-0 text-base-content shadow-sm">
-                {{ product.categoryName || '默认' }}
+                {{ product.categoryName || 'Default' }}
               </span>
             </div>
           </figure>
@@ -106,13 +106,13 @@
                   'bg-red-50 text-red-500': product.availableStock === 0
                 }"
               >
-                {{ product.availableStock === 0 ? '已售罄' : lowStock(product) ? `紧张(${product.availableStock})` : '有货' }}
+                {{ product.availableStock === 0 ? 'Sold Out' : lowStock(product) ? `Low Stock (${product.availableStock})` : 'In Stock' }}
               </span>
               <span
                 v-else-if="product.deliveryType === 'FIXED_CARD'"
                 class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600"
               >
-                有货
+                In Stock
               </span>
               <span
                 v-else-if="product.deliveryType === 'MANUAL'"
@@ -123,7 +123,7 @@
                   'bg-red-50 text-red-500': product.availableStock === 0
                 }"
               >
-                {{ product.availableStock === 0 ? '已售罄' : product.availableStock > 0 ? (product.availableStock < 10 ? `紧张(${product.availableStock})` : '人工发货') : '人工发货' }}
+                {{ product.availableStock === 0 ? 'Sold Out' : product.availableStock > 0 ? (product.availableStock < 10 ? `Low Stock (${product.availableStock})` : 'Manual Delivery') : 'Manual Delivery' }}
               </span>
               <span
                 v-else-if="product.deliveryType === 'EXPRESS'"
@@ -134,7 +134,7 @@
                   'bg-red-50 text-red-500': product.availableStock === 0
                 }"
               >
-                {{ product.availableStock === 0 ? '已售罄' : product.availableStock > 0 ? (product.availableStock < 10 ? `紧张(${product.availableStock})` : '实体商品') : '实体商品' }}
+                {{ product.availableStock === 0 ? 'Sold Out' : product.availableStock > 0 ? (product.availableStock < 10 ? `Low Stock (${product.availableStock})` : 'Physical Product') : 'Physical Product' }}
               </span>
               <div class="flex items-baseline gap-0.5">
                 <span class="text-[11px] font-bold text-red-500/60">¥</span>
@@ -149,18 +149,18 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="size-10 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
         </svg>
-        <p class="text-sm">当前还没有上架商品</p>
-        <p class="text-xs mt-1 opacity-60">请先在后台录入分类、商品和库存</p>
+        <p class="text-sm">No products are available yet</p>
+        <p class="text-xs mt-1 opacity-60">Add categories, products, and inventory in the admin panel first.</p>
       </div>
 
       <!-- 加载更多触发器和状态 -->
       <div v-if="filteredProducts.length > 0" ref="sentinelRef" class="py-8 text-center">
         <div v-if="loading" class="flex items-center justify-center gap-2 text-base-content/60">
           <span class="loading loading-spinner loading-sm"></span>
-          <span>加载中...</span>
+          <span>Loading...</span>
         </div>
         <div v-else-if="!hasMore" class="text-base-content/40 text-sm">
-          已加载全部商品
+          All products loaded
         </div>
       </div>
     </section>

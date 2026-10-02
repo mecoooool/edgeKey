@@ -2,9 +2,9 @@
   <div class="mx-auto">
 
     <div class="tabs tabs-lift">
-      <a class="tab" :class="{ 'tab-active': activeTab === 'query' }" @click="activeTab = 'query'">订单查询</a>
+      <a class="tab" :class="{ 'tab-active': activeTab === 'query' }" @click="activeTab = 'query'">Order Lookup</a>
       <a class="tab" :class="{ 'tab-active': activeTab === 'local' }" @click="activeTab = 'local'">
-        本地订单
+        Local Orders
         <span v-if="localOrders.length" class="indicator-item badge badge-primary badge-sm ml-1">{{ localOrders.length }}</span>
       </a>
     </div>
@@ -13,14 +13,14 @@
     <div v-if="activeTab === 'local'" class="card bg-base-100 shadow-sm rounded-tl-none">
       <div class="card-body">
         <div class="mb-2 flex items-center justify-between gap-3">
-          <span class="text-sm text-base-content/60">本地订单会在打开页面时自动同步最新状态</span>
-          <AppButton size="sm" variant="outline" :loading="syncingLocalOrders" @click="handleRefreshLocalOrders">刷新状态</AppButton>
+          <span class="text-sm text-base-content/60">Local orders sync automatically when this page opens.</span>
+          <AppButton size="sm" variant="outline" :loading="syncingLocalOrders" @click="handleRefreshLocalOrders">Refresh Status</AppButton>
         </div>
         <div v-if="!localOrders.length" class="flex flex-col items-center gap-2 py-8 text-base-content/40">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
           </svg>
-          <p class="text-sm">暂无本地订单，在本设备下单后会自动保存在此</p>
+          <p class="text-sm">No local orders yet. Orders placed on this device will appear here.</p>
         </div>
 
         <div v-else class="space-y-2 max-h-96 overflow-y-auto pr-1">
@@ -54,15 +54,15 @@
     <div v-if="activeTab === 'query'" class="card bg-base-100 shadow-sm rounded-tl-none">
       <div class="card-body space-y-4">
         <label class="flex flex-col gap-1.5">
-          <span class="label-text font-medium">订单号</span>
-          <input v-model="orderNo" class="input input-bordered w-full" placeholder="请输入订单号" />
+          <span class="label-text font-medium">Order Number</span>
+          <input v-model="orderNo" class="input input-bordered w-full" placeholder="Enter order number" />
         </label>
         <label class="flex flex-col gap-1.5">
-          <span class="label-text font-medium">查询凭证</span>
-          <input v-model="queryToken" class="input input-bordered w-full" placeholder="请输入查询 token" />
+          <span class="label-text font-medium">Query Token</span>
+          <input v-model="queryToken" class="input input-bordered w-full" placeholder="Enter query token" />
         </label>
         <div class="flex items-center gap-3">
-          <AppButton variant="primary" :loading="querying" @click="handleQuery">查询订单</AppButton>
+          <AppButton variant="primary" :loading="querying" @click="handleQuery">Find Order</AppButton>
           <span v-if="errorMessage" class="text-sm text-error">{{ errorMessage }}</span>
         </div>
       </div>
@@ -168,13 +168,13 @@ async function handleQuery() {
     });
 
     if (!result) {
-      errorMessage.value = "未找到匹配订单，请检查订单号和查询凭证。";
+      errorMessage.value = "No matching order found. Check the order number and query token.";
       return;
     }
 
     window.location.href = `/order/${result.orderNo}?token=${encodeURIComponent(queryToken.value)}`;
   } catch (error) {
-    errorMessage.value = normalizeTelefuncError(error, "查询失败");
+    errorMessage.value = normalizeTelefuncError(error, "Lookup failed");
   } finally {
     querying.value = false;
   }
